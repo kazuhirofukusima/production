@@ -26,88 +26,9 @@ import datetime # for date
 
 
 
-# 入力された値を判断，それに応じてメッセージ及び，値を返す
-def judge(searchWord, message):
-    if len(searchWord) == 2:
-        busStop = searchWord[1]
-        if re.search('みなみ', busStop):
-            message.send('キャンパス → みなみ野駅だね！')
-            return 0
-        elif re.search('はち', busStop):
-            message.send('キャンパス → 八王子駅だね！')
-            return 1
-        elif re.search('がくせい', busStop):
-            message.send('がくせいかいかんだね！')
-            return 2
-        else:
-            message.send('「'+ busStop + '」は知らないなあ〜')
-            message.send('みなみの/はちおうじ .. から場所を指定してね！')
-            return 100
-    else:
-        message.send('以下のように言ってくれると時刻に応じたバスの時刻を提示できるよ！')
-        message.send('例）ばす [みなみの/はちおうじ/..]')
-        return 100
-
-
-# バスデータを振り分ける
-def assignData(status, bsObj):
-    tagName = 'tbody'
-    minamino = bsObj.findAll(tagName)[0]
-    hachioji = bsObj.findAll(tagName)[1]
-    gakuseikaikan = bsObj.findAll(tagName)[2]
-
-    return filterData(bsObj.findAll(tagName)[status])
-
-# バスデータを絞りこむ
-def filterData(data):
-    tagName = 'td'
-    data = data.findAll(tagName)
-
-    for i in range(len(data)):
-        data[i] = data[i].string
-    return data
-
-
-# 現在時刻を取得し，バスデータと比較・適切なバスデータを返す
-def getBusTime(startData, finishData):
-    # {0:←0番目の引数（今回だとnow）が入る}
-    now = datetime.datetime.now()
-    nowHour = '{0:%H}'.format(now)
-    nowMinute = '{0:%M}'.format(now)
-
-    resultData = ['現在時刻 : ' + nowHour + ':' + nowMinute]
-
-    # 指定時刻を元に適切なバスデータをgetApplyTime()により取得する
-    busTimeData= getApplyTime(startData, finishData, nowHour, nowMinute)
-    if busTimeData != 0:
-        resultData.append(busTimeData)
-        return resultData
-    elif (int(nowHour)<22) and (int(nowHour)>5):
-        nextHour = '{0:02d}'.format(int(nowHour)+1)
-        nextMinute = '00'
-        resultData.append(getApplyTime(startData, finishData, nextHour, nextMinute))
-        return resultData
-    elif int(nowHour)<6:
-        nextHour = '07'
-        nextMinute = '00'
-        resultData.append(str(getApplyTime(startData, finishData, nextHour, nextMinute)) + '\n\n早いねー このバスは始発だよ!')
-        return resultData
-    else:
-        resultData.append('ごめんね　今日の運行は終了したよ')
-        return resultData
-
-
-# バスデータの中からhourに該当し，かつminuteより時刻が遅いものがあればそのデータセットを返す
-def getApplyTime(startData, finishData, hour, minute):
-    for j in range(len(startData)):
-        if (startData[j].startswith(hour)) and (startData[j].split(':')[1]>=minute):
-            return '出発予定:' + startData[j] + ' → 到着予定: ' + finishData[j]
-    return 0
-
-
-
-
-# main
+'''
+<main>
+'''
 @listen_to('バス')
 @listen_to('ばす')
 def main(message):
@@ -136,3 +57,100 @@ def main(message):
     except:
         import traceback
         traceback.print_exc()
+
+
+
+'''
+<<function>
+'''
+
+
+def judge(searchWord, message):
+    '''
+    入力された値を判断，それに応じてメッセージを送り，ステータスを返す
+    '''
+    if len(searchWord) == 2:
+        busStop = searchWord[1]
+        if re.search('みなみ', busStop):
+            message.send('キャンパス → みなみ野駅だね！')
+            return 0
+        elif re.search('はち', busStop):
+            message.send('キャンパス → 八王子駅だね！')
+            return 1
+        elif re.search('がくせい', busStop):
+            message.send('がくせいかいかんだね！')
+            return 2
+        else:
+            message.send('「'+ busStop + '」は知らないなあ〜')
+            message.send('みなみの/はちおうじ .. から場所を指定してね！')
+            return 100
+    else:
+        message.send('以下のように言ってくれると時刻に応じたバスの時刻を提示できるよ！')
+        message.send('例）ばす [みなみの/はちおうじ/..]')
+        return 100
+
+
+def assignData(status, bsObj):
+    '''
+    バスデータを系統別に振り分ける
+    '''
+    tagName = 'tbody'
+    minamino = bsObj.findAll(tagName)[0]
+    hachioji = bsObj.findAll(tagName)[1]
+    gakuseikaikan = bsObj.findAll(tagName)[2]
+
+    return filterData(bsObj.findAll(tagName)[status])
+
+
+def filterData(data):
+    '''
+    バスデータを指定された系統に絞りこむ
+    '''
+    tagName = 'td'
+    data = data.findAll(tagName)
+
+    for i in range(len(data)):
+        data[i] = data[i].string # .stringで，タグ(data[i])内の文字列を取得
+
+    return data
+
+
+def getBusTime(startData, finishData):
+    '''
+    現在時刻を取得し，バスデータと比較・適切なバスデータを返す
+    '''
+    # {0:←0番目の引数（今回だとnow）が入る}
+    now = datetime.datetime.now()
+    nowHour = '{0:%H}'.format(now)
+    nowMinute = '{0:%M}'.format(now)
+
+    resultData = ['現在時刻 : ' + nowHour + ':' + nowMinute]
+
+    # 指定時刻を元に適切なバスデータをgetApplyTime()により取得する
+    busTimeData= getApplyTime(startData, finishData, nowHour, nowMinute)
+    if busTimeData != 0:
+        resultData.append(busTimeData)
+        return resultData
+    elif (int(nowHour)<22) and (int(nowHour)>5):
+        nextHour = '{0:02d}'.format(int(nowHour)+1)
+        nextMinute = '00'
+        resultData.append(getApplyTime(startData, finishData, nextHour, nextMinute))
+        return resultData
+    elif int(nowHour)<6:
+        nextHour = '07'
+        nextMinute = '00'
+        resultData.append(str(getApplyTime(startData, finishData, nextHour, nextMinute)) + '\n\n早いねー このバスは始発だよ!')
+        return resultData
+    else:
+        resultData.append('ごめんね　今日の運行は終了したよ')
+        return resultData
+
+
+def getApplyTime(startData, finishData, hour, minute):
+    '''
+    バスデータの中からhourに該当し，かつminuteより時刻が遅いものがあればそのデータセットを返す
+    '''
+    for j in range(len(startData)):
+        if (startData[j].startswith(hour)) and (startData[j].split(':')[1]>=minute):
+            return '出発予定:' + startData[j] + ' → 到着予定: ' + finishData[j]
+    return 0
