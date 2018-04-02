@@ -4,10 +4,10 @@ from slackbot.bot import default_reply  # 該当する応答がない場合に�
 
 import urllib.request, urllib.error #urlにアクセスするライブラリ
 from bs4 import BeautifulSoup #parseHTMLとXMLのパーサー
-
 import re # for Regular expression
-
 import datetime # for date
+
+from plugins import url # 適切なバス時刻表のURLを取得
 
 # @respond_to('string')     bot宛のメッセージ
 #                           stringは正規表現が可能 「r'string'」
@@ -26,6 +26,8 @@ import datetime # for date
 
 
 
+
+
 '''
 <main>
 '''
@@ -33,11 +35,12 @@ import datetime # for date
 @listen_to('ばす')
 def main(message):
 
-    url = 'http://www.teu.ac.jp/campus/access/2017_kihon-a_bus.html'
+    topURL = 'http://www.teu.ac.jp/campus/access/006644.html'
     searchWord = message.body['text'].split()
 
     try:
-        html= urllib.request.urlopen(url)
+        targetURL = url.getURL(topURL)
+        html= urllib.request.urlopen(targetURL)
         bsObj = BeautifulSoup(html, 'lxml')
 
         status = judge(searchWord, message)
@@ -48,10 +51,8 @@ def main(message):
             startData = allData[::4]
             finishData = allData[1::4]
 
-            resultData = getBusTime(startData, finishData)
-            #message.send(str(resultData[0]))
-            message.send(str(resultData[1]))
-
+            message.send(str(getBusTime(startData, finishData)[1]))
+            message.send('(参照元 :{0})'.format(targetURL.replace('http://www.teu.ac.jp/campus/access/', '')))
     except urllib.error.HTTPError:
         message.send('error:バス時刻表のページが見つからんよ！')
     except:
@@ -63,7 +64,6 @@ def main(message):
 '''
 <<function>
 '''
-
 
 def judge(searchWord, message):
     '''
@@ -95,9 +95,10 @@ def assignData(status, bsObj):
     バスデータを系統別に振り分ける
     '''
     tagName = 'tbody'
+
     minamino = bsObj.findAll(tagName)[0]
     hachioji = bsObj.findAll(tagName)[1]
-    gakuseikaikan = bsObj.findAll(tagName)[2]
+    #gakuseikaikan = bsObj.findAll(tagName)[2]
 
     return filterData(bsObj.findAll(tagName)[status])
 
