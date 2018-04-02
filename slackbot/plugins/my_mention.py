@@ -31,6 +31,8 @@ from plugins import url # 適切なバス時刻表のURLを取得
 '''
 <main>
 '''
+@respond_to('バス')
+@respond_to('ばす')
 @listen_to('バス')
 @listen_to('ばす')
 def main(message):
