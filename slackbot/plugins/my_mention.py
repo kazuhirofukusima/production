@@ -6,8 +6,10 @@ import urllib.request, urllib.error #urlにアクセスするライブラリ
 from bs4 import BeautifulSoup #parseHTMLとXMLのパーサー
 import unicodedata # example -> unicodedata.normalize('NFKC', text) 全角から半角
 import re # for Regular expression
+import datetime # for year,month and day
 
 from plugins import url # 適切なバス時刻表のURLを取得
+from plugins import pointReplaceDict # 系統と停留所の対応表
 from plugins import timeTableData # バス時刻表を取得し，指定の形式でデータを扱う
 
 # @respond_to('string')     bot宛のメッセージ
@@ -46,7 +48,10 @@ def main(message):
     elif status=='list': # 使用可能な時刻表リスト
         sendMessage += getTimetableList(topURL)
     elif status=='time': # バス時刻検索
-        sendMessage += getSearchResult(topURL, result['option'])
+        if len(result['option'])==1 or re.search(':|\d', result['option']): # 第二入力値が無いか，適切な場合
+            sendMessage += getSearchResult(topURL, result['option'])
+        else: # 不適切な場合
+            sendMessage += '文字列｢{0}｣は無効だよ\n'.format(result['option'].split(',')[1])
     else: # status==invalid(何らかの理由により無効)
         sendMessage += '使い方は \"へるぷ\" とメッセージを送って確認してね！'
 
@@ -101,7 +106,7 @@ def getOption(messages):
     else: # 学生会館
         option = 'g'
 
-    # 時刻表の指定がある場合(indexがある場合)
+    # 時刻表の指定(index)や時刻の指定がある場合
     if len(messages)==2:
         option += ',{0}'.format(messages[1])
 
@@ -153,18 +158,24 @@ def getSearchResult(topURL, option):
     必要なバス時刻を整形した文字列を返す
     '''
     option = unicodedata.normalize('NFKC', option).split(',') # 全角を半角にし，データを分割
+    route = option[0]
     targetURL = getTargetURL(topURL, option) # 対象とする時刻表データのurlを取得
 
     if targetURL==None: # urlがない，つまり一般の日曜日など，運行自体がない場合
-        return 'ごめんね，今日は運行がないよ...' + targetURL
+        returnMessage = 'ごめんね，今日は運行がないよ...' + targetURL
     else: # 運行がある場合
-        aptData, sendMessage = getAptData(targetURL, option[0]) # 指定の系統(option[0]:route)の全時刻データとメッセージを取得
+        aptData = getAptData(targetURL, route) # 指定の系統(option[0]:route)の全時刻データを取得
 
-    if aptData==None: # 学生会館へのバス運行がない場合
-        return sendMessage + targetURL
-    else:
-        #busList = getBusList(aptData)
-        return sendMessage + targetURL
+        if aptData==None: # 学生会館へのバス運行がない場合
+            returnMessage = 'ごめんね，学生会館へのバスは運行がないよ...'
+        else:
+            busList = getBusList(aptData, route) # 指定の系統(option[0]:route)のバス時刻データリストを取得
+            if len(option)==2 and ':' in option[1]: # 時刻の指定がある場合
+                returnMessage = getAppropriateBus(option[1], busList)
+            else:
+                returnMessage = getAppropriateBus(None, busList)
+
+    return returnMessage + '\nurl：' + targetURL
 
 
 
@@ -172,7 +183,7 @@ def getTargetURL(topURL, option):
     '''
     ユーザが検索に使用する時刻表を指定しているか否かを判断し，適切な時刻表データのurlを返す
     '''
-    if len(option)==2: # ユーザが使用する時刻表を指定した場合(現在未対応)
+    if len(option)==2 and ':' not in option[1]: # ユーザが使用する時刻表を指定した場合(現在未対応)
         return 'http://www.teu.ac.jp/campus/access/2018_kihon-a_bus.html'
     else: # 今日の時刻表のurlを取得
         return url.getTarget(topURL, 'url')
@@ -181,7 +192,7 @@ def getTargetURL(topURL, option):
 
 def getAptData(targetURL, route):
     '''
-    指定された系統の時刻表データを全て取得，適切なメッセージとデータを返す
+    指定された系統の時刻表データを全て取得，適切なデータを返す
     '''
     try:
         # targetURLで指定したurlにアクセスし，内容を取得
@@ -195,21 +206,112 @@ def getAptData(targetURL, route):
         # tbodyは系統の数だけあることを利用し，学生会館系統の運行がない場合を考慮
         if route=='g': # 学生会館をユーザが指定
             if len(allData)==3: # 学生会館への運行がある
-                return allData[2], '系統：学生会館'
+                return allData[2]
             else: # len(allData)==2 学生会館への運行がない
-                return None, 'ごめんね，学生会館へのバスは運行がないよ...'
+                return None
         else:
             if route=='m': # 系統:みなみ野
-                return allData[0], '系統：みなみ野'
+                return allData[0]
             else: # 系統:八王子
-                return allData[1], '系統：八王子駅南口'
+                return allData[1]
     except:
         import traceback
         traceback.print_exc()
 
 
 
-def getBusList(aptData):
+def getBusList(aptData, route):
     '''
-    キャンパスから駅(forStation)，駅からキャンパス(forCampus)への辞書型のバス時刻データリストを作成し返す
+    系統に応じた，キャンパスから駅(toSta)，駅からキャンパス(toCampus)へのtimeTableData型のバス時刻データ2つを持つ辞書型データを作成し返す
     '''
+    tr = aptData.findAll('tr')
+
+    toStaList = getTimeTableDataList(tr, 0, route)
+    toCampusList = getTimeTableDataList(tr, 1, route)
+
+    busList = {
+        'toSta':toStaList,
+        'toCampus':toCampusList
+    }
+
+    return busList
+
+
+
+
+def getTimeTableDataList(tr, kind, route):
+    '''
+    引数に応じた，timeTableData型のバス時刻データリストを作成し返す
+    '''
+    dataList = []
+
+    for line in tr: # trタグ分だけ繰り返す
+        if line.td!=None: # thタグのみ含むtrの塊は除く
+            if 'sbus' in str(line.findAll('td')): # シャトル運行の時
+                shuttleFlag = True
+            else:
+                shuttleFlag = False
+
+            if kind==0: # toStaListを作成する場合
+                depPoint = 'キャンパス'
+                arrPoint = url.replaceMulti(route, pointReplaceDict.getPointDict())
+            else: # kind==1 toCampusListを作成する場合
+                depPoint = url.replaceMulti(route, pointReplaceDict.getPointDict())
+                arrPoint = 'キャンパス'
+
+            depTime = line.findAll('td')[kind].string
+            arrTime = line.findAll('td')[kind+1].string
+            data =  timeTableData.TimeTableData(depPoint, depTime, arrPoint, arrTime, shuttleFlag)
+            dataList.append(data)
+
+    return dataList
+
+
+
+def getAppropriateBus(argTime, busList):
+    '''
+    現在時刻から適切なバス時刻データを返す
+    '''
+    # 時刻の指定があればそれを適用，無ければ今の時刻を取得
+    if argTime==None: # 指定なし
+        now = datetime.datetime.now()
+        time = '{0}:{1}'.format('{0:%H}'.format(now), '{0:%M}'.format(now)) # hour:min
+    else:
+        time = argTime
+
+    # バス時刻データ（キャンパスからと駅から）をそれぞれ取得しreturnMessageに格納
+    print(time)
+    returnMessage = getAppropriateMessage(time, busList['toSta']) + '\n'
+    returnMessage += getAppropriateMessage(time, busList['toCampus'])
+
+    return returnMessage
+
+
+def getAppropriateMessage(time, dataList):
+    '''
+    バスデータの中からhourに該当し，かつminuteより時刻が遅いものがあればそのデータセットを返す
+    '''
+    hour, min = time.split(':')
+
+    for data in dataList:
+        dataHour, dataMin = data.depTime.split(':')
+
+        print('指定 {0}:{1}, 取得データ {2}:{3}'.format(hour, min, dataHour, dataMin))
+        shuttleFlag = False
+
+        if '～' in dataHour: # 取得したデータがシャトル運行を表す"～"だった場合
+            shuttleFlag = True
+            print('Trueにしたよ')
+            continue
+
+        if (dataHour==hour and int(dataMin)>int(min)) or int(dataHour)>int(hour): # 該当する場合
+            print('dataHour==hour:{0}, dataMin>=min:{1}, dataHour>=hour:{2}'.format(dataHour==hour, dataMin>=min, dataHour>=hour))
+            if shuttleFlag:
+                return '現在シャトル運行中だよ({0})'.format(data.getData())
+            else:
+                return data.getData()
+        else:
+            shuttleFlag = False
+            print('Falseにしたよ')
+
+    return '運行が終了しているよ'

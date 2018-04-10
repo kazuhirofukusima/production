@@ -86,7 +86,7 @@ def getTarget(topURL, target): # target:'url' or 'list'
         # topURLで指定されたページにあるバス時刻表へのリンク（aタグ & bus.htmlの文字列部分一致）を全て取得しtagsに格納
         html= urllib.request.urlopen(topURL)
         bsObj = BeautifulSoup(html, 'lxml')
-        tags = bsObj.find_all(href=re.compile('bus.html'))
+        tags = bsObj.findAll(href=re.compile('bus.html'))
     except urllib.error.HTTPError:
         print('HTTPError')
     except:
