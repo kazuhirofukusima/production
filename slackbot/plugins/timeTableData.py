@@ -25,6 +25,6 @@ class TimeTableData:
         バス時刻データを整形して返す
         '''
         if self.shuttleFlag: # シャトル運行時
-            return '<現在シャトル運行> [{0}]{1} -> [{2}]{3}'.format(self.depPoint, self.depTime, self.arrPoint, self.arrTime)
+            return '!!現在シャトル運行!!  ( 参考 [{0}]{1} -> [{2}]{3} )'.format(self.depPoint, self.depTime, self.arrPoint, self.arrTime)
         else:
             return '[{0}]{1} -> [{2}]{3}'.format(self.depPoint, self.depTime, self.arrPoint, self.arrTime)

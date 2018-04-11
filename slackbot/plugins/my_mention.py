@@ -280,7 +280,6 @@ def getAppropriateBus(argTime, busList):
         time = argTime
 
     # バス時刻データ（キャンパスからと駅から）をそれぞれ取得しreturnMessageに格納
-    print(time)
     returnMessage = getAppropriateMessage(time, busList['toSta']) + '\n'
     returnMessage += getAppropriateMessage(time, busList['toCampus'])
 
@@ -292,26 +291,21 @@ def getAppropriateMessage(time, dataList):
     バスデータの中からhourに該当し，かつminuteより時刻が遅いものがあればそのデータセットを返す
     '''
     hour, min = time.split(':')
+    shuttleFlag = False
 
     for data in dataList:
         dataHour, dataMin = data.depTime.split(':')
 
-        print('指定 {0}:{1}, 取得データ {2}:{3}'.format(hour, min, dataHour, dataMin))
-        shuttleFlag = False
-
-        if '～' in dataHour: # 取得したデータがシャトル運行を表す"～"だった場合
+        if '～' in dataHour: # 取得したデータがシャトル運行を表す"～"だった場合，flagをTrueにしカーソルを１つ進める
             shuttleFlag = True
-            print('Trueにしたよ')
             continue
 
         if (dataHour==hour and int(dataMin)>int(min)) or int(dataHour)>int(hour): # 該当する場合
-            print('dataHour==hour:{0}, dataMin>=min:{1}, dataHour>=hour:{2}'.format(dataHour==hour, dataMin>=min, dataHour>=hour))
             if shuttleFlag:
-                return '現在シャトル運行中だよ({0})'.format(data.getData())
+                return '!!現在シャトル運行!!  ( シャトル終了後 {0} )'.format(data.getData())
             else:
                 return data.getData()
         else:
             shuttleFlag = False
-            print('Falseにしたよ')
 
     return '運行が終了しているよ'
