@@ -21,7 +21,6 @@ def getDate(dateStr): # dateStr:'today' or 'yyyy/mm/dd'
         'day':str(date.strftime('%Y%m%d')),
         'dayOfTheWeek':str(date.weekday())
     }
-    print(date)
     return date
 
 
@@ -69,8 +68,6 @@ def getURL(urlDict):
         targetURL += urlDict['saturday']
     else: # それ以外なら基本時刻表（平日）のURLを指定
         targetURL += urlDict['weekday']
-
-    print('this case:{0}'.format(targetURL))
     return targetURL
 
 
