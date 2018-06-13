@@ -290,7 +290,11 @@ def getAppropriateMessage(time, dataList):
     '''
     バスデータの中からhourに該当し，かつminuteより時刻が遅いものがあればそのデータセットを返す
     '''
-    hour, min = time.split(':')
+    # ゼロ埋めして桁を揃える
+    time = time.zfill(5)
+
+    # 検索にかける時刻をhourとmi
+    hour, minute = time.split(':')
     shuttleFlag = False
 
     for data in dataList:
@@ -300,7 +304,7 @@ def getAppropriateMessage(time, dataList):
             shuttleFlag = True
             continue
 
-        if (dataHour==hour and int(dataMin)>int(min)) or int(dataHour)>int(hour): # 該当する場合
+        if (dataHour==hour and int(dataMin)>int(minute)) or int(dataHour)>int(hour): # 該当する場合
             if shuttleFlag:
                 return '!!現在シャトル運行!!  ( シャトル終了後 {0} )'.format(data.getData())
             else:
