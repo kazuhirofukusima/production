@@ -80,7 +80,7 @@ def classify(messages):
             result['status'] = 'list'
             result['message'] = '==現在利用できる時刻表リスト==\n\n'
             result['message'] += '\"[系統] [index]\"とメッセージを送ると，indexで指定した時刻表データで時刻検索を行うよ！\n\n'
-        elif re.search('みなみ|はち|八|がく|学生', arg): # 必要なバス時刻を提示
+        elif re.search('み|はち|八|がく|学生', arg): # 必要なバス時刻を提示
             result['status'] = 'time'
             result['message'] = '==検索結果==\n\n'
             result['option'] = getOption(messages)
@@ -99,7 +99,7 @@ def getOption(messages):
     messagesの内容を元に，result['option']に格納する「系統，検索の条件等を指定する文字列」を返す
     '''
     route = messages[0] # 系統(みなみ野 .etc)
-    if re.search('みなみ', route): # みなみ野
+    if re.search('み', route): # みなみ野
         option = 'm'
     elif re.search('はち|八', route): # 八王子
         option = 'h'
