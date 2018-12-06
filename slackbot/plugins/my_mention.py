@@ -34,6 +34,7 @@ from plugins import timeTableData # バス時刻表を取得し，指定の形�
 '''
 @respond_to('')
 def main(message):
+    version = '0.1.0'
     messages = message.body['text'].split() # botに対する発言を取得
     topURL = 'http://www.teu.ac.jp/campus/access/006644.html' # 時刻表一覧が示されているページのURL
 
@@ -55,6 +56,7 @@ def main(message):
     else: # status==invalid(何らかの理由により無効)
         sendMessage += '使い方は \"へるぷ\" とメッセージを送って確認してね！'
 
+    sendMessage += '\n(ver.' + version + ')'
     message.send(sendMessage)
 
 
@@ -130,7 +132,7 @@ def getHelp():
     helpMessage += '(系統:みなみ野，はちおうじ...)\n\n'
     helpMessage += '------------------------\n'
     helpMessage += '※ 同じ単語であれば，片仮名・漢字・英語の表現にも対応しているよ\n\n'
-    helpMessage += '※ 単語間にはスペースを入力する必要があるよ\n\n'
+    helpMessage += '※ 単語間にはスペースを入力する必要があるよ\n'
     return helpMessage
 
 
@@ -175,7 +177,7 @@ def getSearchResult(topURL, option):
             else:
                 returnMessage = getAppropriateBus(None, busList)
 
-    return returnMessage + '\nurl：' + targetURL
+    return returnMessage + '\n\n```url：' + targetURL + '```'
 
 
 
