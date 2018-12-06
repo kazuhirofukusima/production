@@ -177,7 +177,7 @@ def getSearchResult(topURL, option):
             else:
                 returnMessage = getAppropriateBus(None, busList)
 
-    return returnMessage + '\n\n```url：' + targetURL + '```'
+    return returnMessage + '\n```url：' + targetURL + '```'
 
 
 
