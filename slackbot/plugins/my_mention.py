@@ -34,7 +34,7 @@ from plugins import timeTableData # バス時刻表を取得し，指定の形�
 '''
 @respond_to('')
 def main(message):
-    version = '0.1.0'
+    version = '0.1.1'
     messages = message.body['text'].split() # botに対する発言を取得
     topURL = 'http://www.teu.ac.jp/campus/access/006644.html' # 時刻表一覧が示されているページのURL
 
@@ -164,7 +164,7 @@ def getSearchResult(topURL, option):
     targetURL = getTargetURL(topURL, option) # 対象とする時刻表データのurlを取得
 
     if targetURL==None: # urlがない，つまり一般の日曜日など，運行自体がない場合
-        returnMessage = 'ごめんね，今日は運行がないよ...' + targetURL
+        return 'ごめんね，今日は運行がないよ...'
     else: # 運行がある場合
         aptData = getAptData(targetURL, route) # 指定の系統(option[0]:route)の全時刻データを取得
 
