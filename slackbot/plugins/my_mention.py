@@ -58,7 +58,6 @@ def main(message):
     else: # status==invalid(何らかの理由により無効)
         sendMessage += '使い方は \"へるぷ\" とメッセージを送って確認してね！'
 
-    sendMessage += '\n(ver.' + version + ')'
     message.send(sendMessage)
 
 
