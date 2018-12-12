@@ -48,6 +48,8 @@ def main(message):
         sendMessage += getHelp()
     elif status=='list': # 使用可能な時刻表リスト
         sendMessage += getTimetableList(topURL)
+    elif status=='ver': # バージョン情報
+        sendMessage += getVersion()
     elif status=='time': # バス時刻検索
         if len(result['option'])==1 or re.search(':|\d', result['option']): # 第二入力値が無いか，適切な場合
             sendMessage += getSearchResult(topURL, result['option'])
@@ -82,6 +84,9 @@ def classify(messages):
             result['status'] = 'list'
             result['message'] = '==現在利用できる時刻表リスト==\n\n'
             result['message'] += '\"[系統] [index]\"とメッセージを送ると，indexで指定した時刻表データで時刻検索を行うよ！\n\n'
+        elif re.search('バ|ば|ver', arg): # バージョン情報を表示
+            result['status'] = 'ver'
+            result['message'] = '==バージョン情報==\n\n'
         elif re.search('み|はち|八|がく|学生', arg): # 必要なバス時刻を提示
             result['status'] = 'time'
             result['message'] = '==検索結果==\n\n'
@@ -152,6 +157,19 @@ def getTimetableList(topURL):
         counter += 1
 
     return timetableList + '\n\n※まだこの機能は使えないよ（常に基本時刻表が指定されるよ）'
+
+
+
+def getVersion():
+    '''
+    change_logからバージョン情報兼更新履歴を取得
+    '''
+    ver_info = None
+
+    with open('plugins/ver.info', 'r') as f:
+        ver_info = f.read()
+
+    return ver_info
 
 
 
