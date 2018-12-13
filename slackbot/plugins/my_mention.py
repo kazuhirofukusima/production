@@ -48,6 +48,8 @@ def main(message):
         sendMessage += getHelp()
     elif status=='list': # 使用可能な時刻表リスト
         sendMessage += getTimetableList(topURL)
+    elif status=='ver': # バージョン情報
+        sendMessage += getVersion('plugins/ver.log')
     elif status=='time': # バス時刻検索
         if len(result['option'])==1 or re.search(':|\d', result['option']): # 第二入力値が無いか，適切な場合
             sendMessage += getSearchResult(topURL, result['option'])
@@ -56,7 +58,6 @@ def main(message):
     else: # status==invalid(何らかの理由により無効)
         sendMessage += '使い方は \"へるぷ\" とメッセージを送って確認してね！'
 
-    sendMessage += '\n(ver.' + version + ')'
     message.send(sendMessage)
 
 
@@ -82,6 +83,9 @@ def classify(messages):
             result['status'] = 'list'
             result['message'] = '==現在利用できる時刻表リスト==\n\n'
             result['message'] += '\"[系統] [index]\"とメッセージを送ると，indexで指定した時刻表データで時刻検索を行うよ！\n\n'
+        elif re.search('バ|ば|ver', arg): # バージョン情報を表示
+            result['status'] = 'ver'
+            result['message'] = '==バージョン情報==\n\n'
         elif re.search('み|はち|八|がく|学生', arg): # 必要なバス時刻を提示
             result['status'] = 'time'
             result['message'] = '==検索結果==\n\n'
@@ -121,15 +125,17 @@ def getHelp():
     このbotのヘルプを作成し返す
     '''
     helpMessage = '学バスbot busassi は，bot宛にメッセージを送ることで利用できるよ！\n'
-    helpMessage += '基本的なメッセージと対応して行われる処理を以下に示すよ！\n\n'
+    helpMessage += '基本的なメッセージと対応して行われる処理を以下に示すよ！\n'
     helpMessage += '------------------------\n'
-    helpMessage += '\"へるぷ\"\n'
+    helpMessage += '`へるぷ`\n'
     helpMessage += 'botの説明を表示\n\n'
-    helpMessage += '\"りすと\"\n'
+    helpMessage += '`りすと`\n'
     helpMessage += '利用できる時刻表リストを表示\n\n'
-    helpMessage += '\"[系統]\"\n'
+    helpMessage += '`ver`\n'
+    helpMessage += 'バージョン情報とgithubリポジトリのURLを表示\n\n'
+    helpMessage += '`[系統]`\n'
     helpMessage += 'バス時刻検索をする\n'
-    helpMessage += '(系統:みなみ野，はちおうじ...)\n\n'
+    helpMessage += '(系統:みなみ野，はちおうじ...)\n'
     helpMessage += '------------------------\n'
     helpMessage += '※ 同じ単語であれば，片仮名・漢字・英語の表現にも対応しているよ\n\n'
     helpMessage += '※ 単語間にはスペースを入力する必要があるよ\n'
@@ -155,6 +161,22 @@ def getTimetableList(topURL):
 
 
 
+def getVersion(ver_path):
+    '''
+    ver_pathにあたるファイルからバージョン情報兼更新履歴を取得
+    '''
+    ver_info = None
+    git_url = '\n```gitURL:https://github.com/kazuhirofukusima/production```'
+
+    with open(ver_path, 'r') as f:
+        ver_info = f.read()
+
+    ver_info += git_url
+
+    return ver_info
+
+
+
 def getSearchResult(topURL, option):
     '''
     必要なバス時刻を整形した文字列を返す
@@ -177,7 +199,7 @@ def getSearchResult(topURL, option):
             else:
                 returnMessage = getAppropriateBus(None, busList)
 
-    return returnMessage + '\n```url：' + targetURL + '```'
+    return returnMessage + '\n\n```url：' + targetURL + '```'
 
 
 
