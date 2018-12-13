@@ -49,7 +49,7 @@ def main(message):
     elif status=='list': # 使用可能な時刻表リスト
         sendMessage += getTimetableList(topURL)
     elif status=='ver': # バージョン情報
-        sendMessage += getVersion()
+        sendMessage += getVersion('plugins/ver.log')
     elif status=='time': # バス時刻検索
         if len(result['option'])==1 or re.search(':|\d', result['option']): # 第二入力値が無いか，適切な場合
             sendMessage += getSearchResult(topURL, result['option'])
@@ -161,13 +161,13 @@ def getTimetableList(topURL):
 
 
 
-def getVersion():
+def getVersion(ver_path):
     '''
-    change_logからバージョン情報兼更新履歴を取得
+    ver_pathにあたるファイルからバージョン情報兼更新履歴を取得
     '''
     ver_info = None
 
-    with open('plugins/ver.info', 'r') as f:
+    with open(ver_path, 'r') as f:
         ver_info = f.read()
 
     return ver_info
