@@ -166,9 +166,12 @@ def getVersion(ver_path):
     ver_pathにあたるファイルからバージョン情報兼更新履歴を取得
     '''
     ver_info = None
+    git_url = '\n```gitURL:https://github.com/kazuhirofukusima/production```'
 
     with open(ver_path, 'r') as f:
         ver_info = f.read()
+
+    ver_info += git_url
 
     return ver_info
 
