@@ -132,7 +132,7 @@ def getHelp():
     helpMessage += '\"りすと\"\n'
     helpMessage += '利用できる時刻表リストを表示\n\n'
     helpMessage += '\"ver\"\n'
-    helpMessage += 'バージョン情報を表示\n\n'
+    helpMessage += 'バージョン情報とgithubリポジトリのURLを表示\n'
     helpMessage += '\"[系統]\"\n'
     helpMessage += 'バス時刻検索をする\n'
     helpMessage += '(系統:みなみ野，はちおうじ...)\n\n'
