@@ -170,7 +170,7 @@ def getVersion(ver_path):
     ver_info = None
     git_url = '\n```gitURL:https://github.com/kazuhirofukusima/production```'
 
-    with open(ver_path, 'r') as f:
+    with ver_path.open('r') as f:
         ver_info = f.read()
 
     ver_info += git_url
