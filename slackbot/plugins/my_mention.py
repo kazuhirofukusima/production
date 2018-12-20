@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup #parseHTMLとXMLのパーサー
 import unicodedata # example -> unicodedata.normalize('NFKC', text) 全角から半角
 import re # for Regular expression
 import datetime # for year,month and day
+from pathlib import Path # for get the path
 
 from plugins import url # 適切なバス時刻表のURLを取得
 from plugins import pointReplaceDict # 系統と停留所の対応表
@@ -49,7 +50,8 @@ def main(message):
     elif status=='list': # 使用可能な時刻表リスト
         sendMessage += getTimetableList(topURL)
     elif status=='ver': # バージョン情報
-        sendMessage += getVersion('~/production/slackbot/plugins/ver.log')
+        ver_path = Path.cwd() / 'plugins' / 'ver.log'
+        sendMessage += getVersion(ver_path)
     elif status=='time': # バス時刻検索
         if len(result['option'])==1 or re.search(':|\d', result['option']): # 第二入力値が無いか，適切な場合
             sendMessage += getSearchResult(topURL, result['option'])
