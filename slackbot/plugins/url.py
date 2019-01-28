@@ -94,9 +94,10 @@ def getTarget(topURL, target): # target:'url' or 'list'
     # tagsのaタグ内のhref(tags)から余分な文字列を削除
     replaceDict = dict.fromkeys(['/campus/access/', '_bus.html', 'bus.html'], '')
     for tag in tags:
-        key = optimizeKey(tag, replaceDict) # kind of url
-        value = tag.attrs['href'] # url
-        urlDict.setdefault(key, value)
+        key = optimizeKey(tag, replaceDict) # kind of url, yyyymmdd
+        if key not in 'delete':
+            value = tag.attrs['href'] # url
+            urlDict.setdefault(key, value)
 
     # targetに応じたデータを返す(url:適切なURL, list:利用可能な時刻表のリスト)
     if(target=='list'):
